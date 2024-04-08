@@ -1,39 +1,57 @@
 import socket
 import os
 
-sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+class Socket:
 
-Host='127.0.0.1'
-Port=8080
+    def __init__(self, host, port):
+        self.host = '127.0.0.1'
+        self.port = 8080
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-try:
-    os.unlink(Host)
-except FileNotFoundError:
-    pass
+    def bind(self):
+        try:
+            os.unlink(self.host)
+        except FileNotFoundError:
+            pass
+        print('Starting up on {} port {}'.format(self.host, self.port))
+        self.sock.bind((self.host, self.port))
+        self.sock.listen(1)
 
-print('Starting up on {}'.format(Host))
 
-sock.bind((Host,Port))
+class Request:
+    def __init__(self, sock):
+        self.sock = sock
+        self.connection=None
+        self.client_address=None
 
-sock.listen(1)
-
-while True:
-    connection,client_address=sock.accept()
-    try:
-        print('Connection from {}'.format(client_address))
-
+    def getFunction(self):
         while True:
-            data=connection.recv(1024)
-            data_str=data.decode('utf-8')
+           self.connection, self.client_address = self.sock.accept()
+           try:
+               print('Connection from {}'.format(self.client_address))
 
-            print('Received {!r}'.format(data_str))
+               while True:
+                   data = self.connection.recv(1024)
+                   data_str = data.decode('utf-8')
 
-            if data:
-                print('Sending data back to the client')
-                connection.sendall(data)
-            else:
-                print('No more data from {}'.format(client_address))
-                break
-    finally:
-        print('Closing connection with {}'.format(client_address))
-        connection.close()
+                   print('Received {!r}'.format(data_str))
+
+                   if data:
+                       print('Sending data back to the client')
+                       self.connection.sendall(data)
+                   else:
+                       print('No more data from {}'.format(self.client_address))
+                       break
+           finally:
+               print('Closing connection with {}'.format(self.client_address))
+               self.connection.close()
+
+def main():
+    sock = Socket('127.0.0.1', 8080)
+    sock.bind()
+    request = Request(sock.sock)
+    request.getFunction()
+
+
+if __name__ == '__main__':
+    main()
