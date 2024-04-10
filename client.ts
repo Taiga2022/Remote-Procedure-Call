@@ -80,18 +80,13 @@ client.connect(Port, Host, () => {
 })
 
 client.on("data", (data: Buffer) => {
-    // type response= {
-    //     result: string,
-    //     result_type: string,
-    //     id: number
-    // }
-    type request = {
-        method: string,
-        params: string|number|[number, number]|[string, string]|string[],
-        param_types: string,
+    type response= {
+        result: string,
+        result_type: string,
         id: number
     }
-    const response: request = JSON.parse(data.toString())
+    
+    const response: response = JSON.parse(data.toString())
     console.log("Received Data:", response)
     client.end()
     client.destroy()

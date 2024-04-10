@@ -1,6 +1,7 @@
 import socket
 import os
 import json
+import math
 class Socket:
 
     def __init__(self, host, port):
@@ -62,6 +63,31 @@ class Function:
         self.params = requestJson['params']
         self.param_types = requestJson['param_types']
         self.id=requestJson['id']
+        self.result = self.call()
+        self.result_type = type(self.result).__name__
+
+    def call(self):
+        if self.method == 'floor':
+            return math.floor(self.params)
+        elif self.method == 'nroot':
+            return math.floor(self.params[0]**(1/self.params[1]))
+        elif self.method == 'reverse':
+            return self.params[::-1]
+        elif self.method == 'validAnagram':
+            return sorted(self.params[0]) == sorted(self.params[1])
+        elif self.method == 'sort':
+            return sorted(self.params)
+        else:
+            return print("Method not found")
+
+    def response(self):
+        return {
+            'result': self.result,
+            'result_type': self.result_type,
+            'id': self.id
+        }
+
+
 
 
 def main():
@@ -69,7 +95,8 @@ def main():
     sock.bind()
     request = Request(sock.sock)
     data = request.receive()
-    request.send(data)
+    response=Function(json.loads(data)).response()
+    request.send(response)
 
 
 if __name__ == '__main__':
