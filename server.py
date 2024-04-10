@@ -1,6 +1,6 @@
 import socket
 import os
-
+import json
 class Socket:
 
     def __init__(self, host, port):
@@ -24,7 +24,7 @@ class Request:
         self.connection=None
         self.client_address=None
 
-    def getFunction(self):
+    def receive(self):
         while True:
            self.connection, self.client_address = self.sock.accept()
            try:
@@ -36,21 +36,40 @@ class Request:
 
                    print('Received {!r}'.format(data_str))
 
-                   if data:
-                       print('Sending data back to the client')
-                       self.connection.sendall(data)
-                   else:
-                       print('No more data from {}'.format(self.client_address))
-                       break
-           finally:
-               print('Closing connection with {}'.format(self.client_address))
-               self.connection.close()
+                   return data_str
+           except Exception as e:
+               print(e)
+
+
+    def send(self, data):
+        try:
+            if data:
+                print('Sending data back to the client')
+                sendData = json.dumps(data)
+                self.connection.sendall(sendData.encode('utf-8'))
+            else:
+                print('No more data from {}'.format(self.client_address))
+        finally:
+            print('Closing connection with {}'.format(self.client_address))
+            self.connection.close()
+
+
+
+
+class Function:
+    def __init__(self, requestJson):
+        self.method = requestJson['method']
+        self.params = requestJson['params']
+        self.param_types = requestJson['param_types']
+        self.id=requestJson['id']
+
 
 def main():
     sock = Socket('127.0.0.1', 8080)
     sock.bind()
     request = Request(sock.sock)
-    request.getFunction()
+    data = request.receive()
+    request.send(data)
 
 
 if __name__ == '__main__':
